@@ -1,0 +1,125 @@
+options:
+
+    # Game rules
+    game-min: 2
+    team-size: 1
+
+    # Admin command messages
+    perm-deny: "&CYou do not have permission to perform this command"
+    lobby-set: "&ALobby location set"
+    spawn-added: "&ASpawn location added"
+    spawns-cleared: "&CSpawns cleared"
+    world-created: "&AWorld created"
+    world-exists: "&CWorld already exists"
+    world-removed: "&CWorld removed"
+
+    # Setup announcements
+    lobby-join: "&AYou have joined the lobby"
+
+    # Game messages
+    join: "&AGame started"
+
+# Joining
+on rightclick on sign:
+    if 1st line of clicked block is "[Survival]":
+        teleport player to {quest.lobby-loc}
+        add player to {quest.lobby::*}
+        send {@lobby-join}
+
+# Start Game
+function startQuestGame(w: string):
+
+    # Moving players from lobby to game
+    set {_added} to 0
+    set {_temp::*} to {quest.lobby::*}
+    loop {_temp::*}:
+        add loop-value to {quest.worlds::%{_w}%::players::*}
+        remove loop-value from {quest.lobby::*}
+        add 1 to {_added}
+        if {_added} >= {@game-min}:
+            exit loop
+    
+    # Team selection
+    set {_team} to 1
+    set {_added-2} to 0
+    loop {quest.worlds::%{_w}%::players::*}:
+
+        add loop-value to {quest.worlds::%{_w}%::teams::%{_team}%::*}
+        send "you are in team %{_team}%" to loop-value
+
+        add 1 to {_added-2}
+        if {_added-2} >= {@team-size}:
+            add 1 to {_team}
+            set {_added-2} to 0
+
+    # Spawn locations
+    loop integers between 1 and ({@game-min} / {@team-size}):
+        
+        set {_spawns::*} to {quest.worlds::%{_w}%::spawns::*}
+        set {_i} to a random integer between 1 and (size of {_spawns::*})
+        set {_loc} to {_spawns::%{_i}%}
+        teleport {quest.worlds::%{_w}%::teams::%loop-integer%::*} to {_loc}
+        remove {_loc} from {_spawns::*}
+
+    send {@join} to {quest.worlds::%{_w}%::players::*}
+
+# Game Timer
+every second:
+    # Countdown to start
+    if size of {quest.lobby::*} >= {@game-min}:
+
+        loop {quest.worlds::*}:
+            if size of {quest.worlds::%loop-index%::players::*} is 0:
+                startQuestGame(loop-index)
+                exit loop
+            else:
+                broadcast "full"
+
+# Commands
+command /clear:
+    trigger:
+        clear {quest.lobby::*}
+        loop {quest.worlds::*}:
+            clear {quest.worlds::%loop-index-1%::players::*}    
+            clear {quest.worlds::%loop-index-1%::teams::*}
+        send "cleared"
+
+command /survivalquest [<string>] [<string>]:
+    aliases: sq
+    executable by: players
+    trigger:
+        if arg-1 is "admin":
+            if player has permission "quest.admin":
+
+                if arg-2 is "addWorld":
+                    if {quest.worlds::*} does not contain player's world:
+                        set {quest.worlds::%player's world%} to player's world
+                        send "Worlds: %{quest.worlds::*}%"
+                        send {@world-created}
+                    else:
+                        send {@world-exists}
+                if arg-2 is "removeWorld":
+                    remove players's world from {quest.worlds::*}
+                    send {@world-removed}
+                if arg-2 is "clearWorlds":
+                    clear {quest.worlds::*}
+                    send "&CALL THE BLOODY DATA IS NOW GONE!"
+
+
+                if arg-2 is "setLobbyLoc":
+                    set {quest.lobby-loc} to player's location
+                    send {@lobby-set}
+                if arg-2 is "addSpawnLoc":
+                    add player's location to {quest.worlds::%player's world%::spawns::*}
+                    send {@spawn-added} 
+                    send "Total: %{quest.worlds::%player's world%::spawns::*}%"
+                if arg-2 is "clearSpawnLocs":
+                    clear {quest.worlds::%player's world%::spawns::*}
+                    send {@spawns-cleared}
+
+            else:
+                send {@perm-deny}
+        if arg-1 is "info":
+            send "Worlds: %{quest.worlds::*}%"
+            loop {quest.worlds::*}:
+                send "Players in %loop-value%/%loop-index%: %{quest.worlds::%loop-index%::players::*}%"        
