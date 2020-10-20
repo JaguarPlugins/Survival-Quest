@@ -67,9 +67,6 @@ function questWin(t: integer, w: world):
 
     questRegen({_w})
 
-    
-    
-
     # Clear variables
     loop {quest.maps::*}:
         clear {quest.maps::%loop-index-1%::players::*}    
@@ -103,6 +100,8 @@ function startQuestGame(w: string):
             set {_added-2} to 0
 
     # Spawning in
+    set {_spawns::*} to {quest.maps::%{_w}%::spawns::*}
+
     loop integers between 1 and ({@game-min} / {@team-size}):
         
         # Adding dummy data to index in list so that it works
@@ -110,12 +109,13 @@ function startQuestGame(w: string):
         set {quest.maps::%{_w}%::alive::%loop-integer%::*} to {quest.maps::%{_w}%::teams::%loop-integer%::*}
 
         # Teleport to spawn location
-        set {_spawns::*} to {quest.maps::%{_w}%::spawns::*}
         set {_i} to a random integer between 1 and (size of {_spawns::*})
         set {_loc} to {_spawns::%{_i}%}
         teleport {quest.maps::%{_w}%::teams::%loop-integer%::*} to {_loc}
         remove {_loc} from {_spawns::*}
 
+    heal {quest.maps::%{_w}%::players::*}
+    clear inventory of {quest.maps::%{_w}%::players::*}
     send {@join} to {quest.maps::%{_w}%::players::*}
     make {quest.maps::%{_w}%::players::1} execute command "/worldborder set 10 %{quest.maps::%{_w}%::border-time}%"
 
@@ -188,7 +188,7 @@ function questRegen(w: world):
     set {quest.maps::%{_w}%::ready} to true
 
 # Commands
-command /clear:
+command /cleardata:
     trigger:
         clear {quest.lobby::*}
         loop {quest.maps::*}:
