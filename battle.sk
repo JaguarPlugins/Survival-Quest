@@ -15,16 +15,59 @@ options:
 
     # Setup announcements
     lobby-join: "&AYou have joined the lobby"
+    re-join: "&6You have already joined the lobby"
 
     # Game messages
     join: "&AGame started"
+    death: "&CYou died!"
 
 # Joining
 on rightclick on sign:
     if 1st line of clicked block is "[Survival]":
-        teleport player to {quest.lobby-loc}
-        add player to {quest.lobby::*}
-        send {@lobby-join}
+
+        if {quest.lobby::*} does not contain player:
+            teleport player to {quest.lobby-loc}
+            add player to {quest.lobby::*}
+            send {@lobby-join}
+        else:
+            send {@re-join}
+
+# Leaving
+function questLeave(p: player):
+    
+    set {_alive} to 0
+    set {_w} to {_p}'s world
+
+    loop {quest.maps::%{_w}%::alive::*}:
+        remove {_p} from {quest.maps::%{_w}%::alive::%loop-index%::*}
+        if (size of {quest.maps::%{_w}%::alive::%loop-index%::*}) > 0:
+            add 1 to {_alive}
+            set {_team} to loop-index parsed as integer
+
+    if {_alive} is 1:
+        questWin(({_team}), ({_p}'s world))
+
+# Game ends & winning
+function questWin(t: integer, w: world):
+
+    wait 1 second
+
+    send "Team %{_t}% wins!" to {quest.maps::%{_w}%::players::*}
+    send "Members: %{quest.maps::%{_w}%::teams::%{_t}%::*}%" to {quest.maps::%{_w}%::players::*} 
+
+    loop {quest.maps::%{_w}%::players::*}:
+        add loop-value to {quest.lobby::*}
+
+    clear inventory of {quest.maps::%{_w}%::players::*}
+    teleport {quest.maps::%{_w}%::players::*} to {quest.lobby-loc}
+    heal {quest.maps::%{_w}%::players::*}
+    set gamemode of {quest.maps::%{_w}%::players::*} to survival
+
+    # Clear variables
+    loop {quest.maps::*}:
+        clear {quest.maps::%loop-index-1%::players::*}    
+        clear {quest.maps::%loop-index-1%::teams::*}
+        clear {quest.maps::%loop-index-1%::alive::*}    
 
 # Start Game
 function startQuestGame(w: string):
@@ -33,7 +76,7 @@ function startQuestGame(w: string):
     set {_added} to 0
     set {_temp::*} to {quest.lobby::*}
     loop {_temp::*}:
-        add loop-value to {quest.worlds::%{_w}%::players::*}
+        add loop-value to {quest.maps::%{_w}%::players::*}
         remove loop-value from {quest.lobby::*}
         add 1 to {_added}
         if {_added} >= {@game-min}:
@@ -42,9 +85,9 @@ function startQuestGame(w: string):
     # Team selection
     set {_team} to 1
     set {_added-2} to 0
-    loop {quest.worlds::%{_w}%::players::*}:
+    loop {quest.maps::%{_w}%::players::*}:
 
-        add loop-value to {quest.worlds::%{_w}%::teams::%{_team}%::*}
+        add loop-value to {quest.maps::%{_w}%::teams::%{_team}%::*}
         send "you are in team %{_team}%" to loop-value
 
         add 1 to {_added-2}
@@ -52,36 +95,57 @@ function startQuestGame(w: string):
             add 1 to {_team}
             set {_added-2} to 0
 
-    # Spawn locations
+    # Spawning in
     loop integers between 1 and ({@game-min} / {@team-size}):
         
-        set {_spawns::*} to {quest.worlds::%{_w}%::spawns::*}
+        # Adding dummy data to index in list so that it works
+        set {quest.maps::%{_w}%::alive::%loop-integer%} to loop-integer
+        set {quest.maps::%{_w}%::alive::%loop-integer%::*} to {quest.maps::%{_w}%::teams::%loop-integer%::*}
+
+        # Teleport to spawn location
+        set {_spawns::*} to {quest.maps::%{_w}%::spawns::*}
         set {_i} to a random integer between 1 and (size of {_spawns::*})
         set {_loc} to {_spawns::%{_i}%}
-        teleport {quest.worlds::%{_w}%::teams::%loop-integer%::*} to {_loc}
+        teleport {quest.maps::%{_w}%::teams::%loop-integer%::*} to {_loc}
         remove {_loc} from {_spawns::*}
 
-    send {@join} to {quest.worlds::%{_w}%::players::*}
+    send {@join} to {quest.maps::%{_w}%::players::*}
 
 # Game Timer
 every second:
+
     # Countdown to start
     if size of {quest.lobby::*} >= {@game-min}:
 
-        loop {quest.worlds::*}:
-            if size of {quest.worlds::%loop-index%::players::*} is 0:
+        loop {quest.maps::*}:
+            if size of {quest.maps::%loop-index%::players::*} is 0:
                 startQuestGame(loop-index)
                 exit loop
             else:
                 broadcast "full"
 
+# Damage
+on damage:
+
+    if {quest.maps::%victim's world%::players::*} contains victim:
+
+        if damage >= victim's health:
+
+            # Death
+            cancel event
+            set victim's gamemode to spectator
+            send victim title {@death}
+            
+            questLeave(victim) 
+
 # Commands
 command /clear:
     trigger:
         clear {quest.lobby::*}
-        loop {quest.worlds::*}:
-            clear {quest.worlds::%loop-index-1%::players::*}    
-            clear {quest.worlds::%loop-index-1%::teams::*}
+        loop {quest.maps::*}:
+            clear {quest.maps::%loop-index-1%::players::*}    
+            clear {quest.maps::%loop-index-1%::teams::*}
+            clear {quest.maps::%loop-index-1%::alive::*}
         send "cleared"
 
 command /survivalquest [<string>] [<string>]:
@@ -92,17 +156,17 @@ command /survivalquest [<string>] [<string>]:
             if player has permission "quest.admin":
 
                 if arg-2 is "addWorld":
-                    if {quest.worlds::*} does not contain player's world:
-                        set {quest.worlds::%player's world%} to player's world
-                        send "Worlds: %{quest.worlds::*}%"
+                    if {quest.maps::*} does not contain player's world:
+                        set {quest.maps::%player's world%} to player's world
+                        send "Maps: %{quest.maps::*}%"
                         send {@world-created}
                     else:
                         send {@world-exists}
                 if arg-2 is "removeWorld":
-                    remove players's world from {quest.worlds::*}
+                    remove players's world from {quest.maps::*}
                     send {@world-removed}
-                if arg-2 is "clearWorlds":
-                    clear {quest.worlds::*}
+                if arg-2 is "clearMaps":
+                    clear {quest.maps::*}
                     send "&CALL THE BLOODY DATA IS NOW GONE!"
 
 
@@ -110,16 +174,16 @@ command /survivalquest [<string>] [<string>]:
                     set {quest.lobby-loc} to player's location
                     send {@lobby-set}
                 if arg-2 is "addSpawnLoc":
-                    add player's location to {quest.worlds::%player's world%::spawns::*}
+                    add player's location to {quest.maps::%player's world%::spawns::*}
                     send {@spawn-added} 
-                    send "Total: %{quest.worlds::%player's world%::spawns::*}%"
+                    send "Total: %{quest.maps::%player's world%::spawns::*}%"
                 if arg-2 is "clearSpawnLocs":
-                    clear {quest.worlds::%player's world%::spawns::*}
+                    clear {quest.maps::%player's world%::spawns::*}
                     send {@spawns-cleared}
 
             else:
                 send {@perm-deny}
         if arg-1 is "info":
-            send "Worlds: %{quest.worlds::*}%"
-            loop {quest.worlds::*}:
-                send "Players in %loop-value%/%loop-index%: %{quest.worlds::%loop-index%::players::*}%"        
+            send "Maps: %{quest.maps::*}%"
+            loop {quest.maps::*}:
+                send "Players in %loop-value%/%loop-index%: %{quest.maps::%loop-index%::players::*}%"
