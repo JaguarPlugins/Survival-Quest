@@ -51,6 +51,7 @@ function questLeave(p: player):
 # Game ends & winning
 function questWin(t: integer, w: world):
 
+    make {quest.maps::%{_w}%::players::1} execute command "/worldborder set %{quest.maps::%{_w}%::border-start}% 1"
     wait 1 second
 
     send "Team %{_t}% wins!" to {quest.maps::%{_w}%::players::*}
@@ -65,6 +66,9 @@ function questWin(t: integer, w: world):
     set gamemode of {quest.maps::%{_w}%::players::*} to survival
 
     questRegen({_w})
+
+    
+    
 
     # Clear variables
     loop {quest.maps::*}:
@@ -113,6 +117,7 @@ function startQuestGame(w: string):
         remove {_loc} from {_spawns::*}
 
     send {@join} to {quest.maps::%{_w}%::players::*}
+    make {quest.maps::%{_w}%::players::1} execute command "/worldborder set 10 %{quest.maps::%{_w}%::border-time}%"
 
 # Game Timer
 every second:
@@ -192,7 +197,7 @@ command /clear:
             clear {quest.maps::%loop-index-1%::alive::*}
         send "cleared"
 
-command /survivalquest [<string>] [<string>]:
+command /survivalquest [<string>] [<string>] [<string>] [<string>]:
     aliases: sq
     executable by: players
     trigger:
@@ -224,6 +229,14 @@ command /survivalquest [<string>] [<string>]:
                 if arg-2 is "clearSpawnLocs":
                     clear {quest.maps::%player's world%::spawns::*}
                     send {@spawns-cleared}
+
+                if arg-2 is "border":
+                    if arg-3 is "start":
+                        set {quest.maps::%player's world%::border-start} to arg-4 parsed as integer
+                        send "&ABorder start set"
+                    if arg-3 is "time":
+                        set {quest.maps::%player's world%::border-time} to arg-4 parsed as integer
+                        send "&ABorder time set"
 
             else:
                 send {@perm-deny}
