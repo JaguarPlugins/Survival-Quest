@@ -3,6 +3,7 @@ options:
     # Game rules
     game-min: 2
     team-size: 1
+    lobby-wait: 10
 
     # Admin command messages
     perm-deny: "&CYou do not have permission to perform this command"
@@ -63,6 +64,8 @@ function questWin(t: integer, w: world):
     heal {quest.maps::%{_w}%::players::*}
     set gamemode of {quest.maps::%{_w}%::players::*} to survival
 
+    questRegen({_w})
+
     # Clear variables
     loop {quest.maps::*}:
         clear {quest.maps::%loop-index-1%::players::*}    
@@ -117,12 +120,29 @@ every second:
     # Countdown to start
     if size of {quest.lobby::*} >= {@game-min}:
 
-        loop {quest.maps::*}:
-            if size of {quest.maps::%loop-index%::players::*} is 0:
-                startQuestGame(loop-index)
-                exit loop
-            else:
-                broadcast "full"
+        if {quest.lobby-timer} is {@lobby-wait}:
+
+            startQuestGame({quest.next-match})
+
+        else if {quest.lobby-timer} > 0:
+
+            send "&b%({@lobby-wait} - {quest.lobby-timer})%" to {quest.lobby::*}
+            add 1 to {quest.lobby-timer}
+
+        else:
+
+            loop {quest.maps::*}:
+                if size of {quest.maps::%loop-index%::players::*} is 0:
+                    if {quest.maps::%{_w}%::ready} is not false:
+
+                        set {quest.next-match} to loop-index
+                        send "&b%({@lobby-wait} - {quest.lobby-timer})%" to {quest.lobby::*}
+                        set {quest.lobby-timer} to 1
+                        exit loop
+
+    else:
+
+        set {quest.lobby-timer} to 0
 
 # Damage
 on damage:
@@ -137,6 +157,30 @@ on damage:
             send victim title {@death}
             
             questLeave(victim) 
+
+# Blocks
+on block break:
+    if {quest.maps::%player's world%::players::*} contains player:
+
+        add type of block to {quest.maps::%player's world%::broken-blocks::*}
+        add block's location to {quest.maps::%player's world%::broken-locs::*}
+
+on block place:
+    if {quest.maps::%player's world%::players::*} contains player:
+
+        add block's location to {quest.maps::%player's world%::placed-locs::*}
+
+function questRegen(w: world):
+    
+    set {quest.maps::%{_w}%::ready} to false
+
+    loop {quest.maps::%{_w}%::placed-locs::*}:
+        set block at loop-value to air
+
+    loop {quest.maps::%{_w}%::broken-blocks::*}:
+        set block at {quest.maps::%{_w}%::broken-locs::%loop-index%} to loop-value
+
+    set {quest.maps::%{_w}%::ready} to true
 
 # Commands
 command /clear:
@@ -183,7 +227,15 @@ command /survivalquest [<string>] [<string>]:
 
             else:
                 send {@perm-deny}
+
         if arg-1 is "info":
             send "Maps: %{quest.maps::*}%"
             loop {quest.maps::*}:
                 send "Players in %loop-value%/%loop-index%: %{quest.maps::%loop-index%::players::*}%"
+
+        if arg-1 is "leavelobby":
+            if {quest.lobby::*} contains player:
+                remove player from {quest.lobby::*}
+                send "&AYou left the lobby"
+            else:
+                send "&6You are not in the lobby"
