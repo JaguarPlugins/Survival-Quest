@@ -88,14 +88,18 @@ function startQuestGame(w: string):
         add 1 to {_added}
         if {_added} >= {@game-min}:
             exit loop
-    
+
     # Team selection
     set {_team} to 1
     set {_added-2} to 0
-    loop {quest.maps::%{_w}%::players::*}:
+    set {_new-players::*} to {quest.maps::%{_w}%::players::*}
+    loop integers between 1 and (size of {_new-players::*}):
 
-        add loop-value to {quest.maps::%{_w}%::teams::%{_team}%::*}
-        send "you are in team %{_team}%" to loop-value
+        set {_new-players::*} to {_new-players::*}
+        set {_i} to a random integer between 1 and (size of {_new-players::*})
+        add {_new-players::%{_i}%} to {quest.maps::%{_w}%::teams::%{_team}%::*}
+        send "you are in team %{_team}%" to {_new-players::%{_i}%}
+        remove {_new-players::%{_i}%} from {_new-players::*}
 
         add 1 to {_added-2}
         if {_added-2} >= {@team-size}:
