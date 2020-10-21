@@ -1,8 +1,8 @@
 options:
 
     # Game rules
-    game-min: 2
-    team-size: 1
+    game-min: 6
+    team-size: 2
     lobby-wait: 10
 
     # Admin command messages
@@ -114,6 +114,7 @@ function startQuestGame(w: string):
         teleport {quest.maps::%{_w}%::teams::%loop-integer%::*} to {_loc}
         remove {_loc} from {_spawns::*}
 
+    set gamemode of {quest.maps::%{_w}%::players::*} to survival
     heal {quest.maps::%{_w}%::players::*}
     clear inventory of {quest.maps::%{_w}%::players::*}
     send {@join} to {quest.maps::%{_w}%::players::*}
@@ -186,6 +187,19 @@ function questRegen(w: world):
         set block at {quest.maps::%{_w}%::broken-locs::%loop-index%} to loop-value
 
     set {quest.maps::%{_w}%::ready} to true
+
+# Chat
+on chat:
+    if {quest.maps::%player's world%::players::*} contains player:
+        cancel event
+        loop {quest.maps::%player's world%::alive::*}:
+            if {quest.maps::%player's world%::alive::%loop-index%::*} contains player:
+                set {_team} to loop-index
+                exit loop
+        if {_team} is set:
+            send "[&aTeam %{_team}%&f: &b%player%&f] &7%message%" to {quest.maps::%player's world%::teams::%{_team}%::*}
+        else:
+            send "&CYou cannot talk to your team when you are dead" to player
 
 # Commands
 command /cleardata:
