@@ -112,6 +112,7 @@ function startQuestGame(w: string):
         set {quest.maps::%{_w}%::alive::%loop-integer%::*} to {quest.maps::%{_w}%::teams::%loop-integer%::*}
 
         # Teleport to spawn location
+        set {_spawns::*} to {_spawns::*}
         set {_i} to a random integer between 1 and (size of {_spawns::*})
         set {_loc} to {_spawns::%{_i}%}
         teleport {quest.maps::%{_w}%::teams::%loop-integer%::*} to {_loc}
