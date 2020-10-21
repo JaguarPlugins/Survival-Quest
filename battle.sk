@@ -21,6 +21,7 @@ options:
     # Game messages
     join: "&AGame started"
     death: "&CYou died!"
+    friendly: "&6Stop hitting your own teammate!"
 
 # Joining
 on rightclick on sign:
@@ -166,9 +167,18 @@ on damage:
 
     if {quest.maps::%victim's world%::players::*} contains victim:
 
+        # Friendly fire
+        loop {quest.maps::%victim's world%::alive::*}:
+            if {quest.maps::%victim's world%::alive::%loop-index%::*} contains victim:
+                if {quest.maps::%victim's world%::alive::%loop-index%::*} contains attacker:
+                    
+                    send {@friendly} to attacker
+                    cancel event
+                    stop
+
+        # Death
         if damage >= victim's health:
 
-            # Death
             cancel event
             set victim's gamemode to spectator
             send victim title {@death}
