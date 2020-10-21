@@ -193,6 +193,13 @@ function questRegen(w: world):
     loop {quest.maps::%{_w}%::broken-blocks::*}:
         set block at {quest.maps::%{_w}%::broken-locs::%loop-index%} to loop-value
 
+    kill all projectiles in {_w}
+    kill all living entities in {_w}
+    kill all boats in {_w}
+    kill all minecarts in {_w}
+    wait 1 second
+    kill all dropped items in {_w}
+
     set {quest.maps::%{_w}%::ready} to true
 
 # Chat
