@@ -51,7 +51,8 @@ function questLeave(p: player):
 # Game ends & winning
 function questWin(t: integer, w: world):
 
-    make {quest.maps::%{_w}%::players::1} execute command "/worldborder set %{quest.maps::%{_w}%::border-start}% 1"
+    {_w}.getWorldBorder().setSize({quest.maps::%{_w}%::border-start}, 1)
+
     wait 1 second
 
     send "Team %{_t}% wins!" to {quest.maps::%{_w}%::players::*}
@@ -77,7 +78,7 @@ function questWin(t: integer, w: world):
         clear {quest.maps::%loop-index-1%::broken-locs::*}
 
 # Start Game
-function startQuestGame(w: string):
+function startQuestGame(w: world):
 
     # Moving players from lobby to game
     set {_added} to 0
@@ -127,7 +128,8 @@ function startQuestGame(w: string):
     heal {quest.maps::%{_w}%::players::*}
     clear inventory of {quest.maps::%{_w}%::players::*}
     send {@join} to {quest.maps::%{_w}%::players::*}
-    make {quest.maps::%{_w}%::players::1} execute command "/worldborder set 10 %{quest.maps::%{_w}%::border-time}%"
+
+    {_w}.getWorldBorder().setSize(10, {quest.maps::%{_w}%::border-time})
 
 # Game Timer
 every second:
@@ -137,7 +139,7 @@ every second:
 
         if {quest.lobby-timer} is {@lobby-wait}:
 
-            startQuestGame({quest.next-match})
+            startQuestGame({quest.next-match} parsed as world)
 
         else if {quest.lobby-timer} > 0:
 
