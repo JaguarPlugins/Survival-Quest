@@ -1,8 +1,8 @@
 options:
 
     # Game rules
-    game-min: 6
-    team-size: 2
+    game-min: 2
+    team-size: 1
     lobby-wait: 10
 
     # Admin command messages
@@ -194,10 +194,11 @@ function questRegen(w: world):
         set block at {quest.maps::%{_w}%::broken-locs::%loop-index%} to loop-value
 
     kill all projectiles in {_w}
-    kill all living entities in {_w}
+    loop all living entities in {_w}:
+        if loop-value is not a player:
+            kill loop-value
     kill all boats in {_w}
     kill all minecarts in {_w}
-    wait 1 second
     kill all dropped items in {_w}
 
     set {quest.maps::%{_w}%::ready} to true
