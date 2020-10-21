@@ -71,7 +71,10 @@ function questWin(t: integer, w: world):
     loop {quest.maps::*}:
         clear {quest.maps::%loop-index-1%::players::*}    
         clear {quest.maps::%loop-index-1%::teams::*}
-        clear {quest.maps::%loop-index-1%::alive::*}    
+        clear {quest.maps::%loop-index-1%::alive::*}
+        clear {quest.maps::%loop-index-1%::placed-locs::*}
+        clear {quest.maps::%loop-index-1%::broken-blocks::*}   
+        clear {quest.maps::%loop-index-1%::broken-locs::*}
 
 # Start Game
 function startQuestGame(w: string):
@@ -115,6 +118,7 @@ function startQuestGame(w: string):
         remove {_loc} from {_spawns::*}
 
     set gamemode of {quest.maps::%{_w}%::players::*} to survival
+    feed {quest.maps::%{_w}%::players::*}
     heal {quest.maps::%{_w}%::players::*}
     clear inventory of {quest.maps::%{_w}%::players::*}
     send {@join} to {quest.maps::%{_w}%::players::*}
@@ -168,13 +172,16 @@ on damage:
 on block break:
     if {quest.maps::%player's world%::players::*} contains player:
 
-        add type of block to {quest.maps::%player's world%::broken-blocks::*}
-        add block's location to {quest.maps::%player's world%::broken-locs::*}
+        if {quest.maps::%player's world%::broken-locs::*} does not contain (block's location):
+            if {quest.maps::%player's world%::placed-locs::*} does not contain (block's location):
+                add type of block to {quest.maps::%player's world%::broken-blocks::*}
+                add block's location to {quest.maps::%player's world%::broken-locs::*}
 
 on block place:
     if {quest.maps::%player's world%::players::*} contains player:
 
-        add block's location to {quest.maps::%player's world%::placed-locs::*}
+        if {quest.maps::%player's world%::placed-locs::*} does not contain (block's location):
+            add block's location to {quest.maps::%player's world%::placed-locs::*}
 
 function questRegen(w: world):
     
@@ -191,6 +198,7 @@ function questRegen(w: world):
 # Chat
 on chat:
     if {quest.maps::%player's world%::players::*} contains player:
+        
         cancel event
         loop {quest.maps::%player's world%::alive::*}:
             if {quest.maps::%player's world%::alive::%loop-index%::*} contains player:
