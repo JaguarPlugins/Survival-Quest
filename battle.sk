@@ -279,23 +279,47 @@ command /survivalquest [<string>] [<string>] [<string>] [<string>] [<string>]:
 
                 if arg-2 is "border":
                     if arg-3 is "start":
+                        if arg-4 is not set:
+                            send "&6Usage: /sq admin border start [diameter]"
+                            stop
                         set {quest.maps::%player's world%::border-start} to arg-4 parsed as integer
                         send "&ABorder start set"
                     if arg-3 is "time":
+                        if arg-4 is not set:
+                            send "&6Usage: /sq admin border time [time]"
+                            stop
                         set {quest.maps::%player's world%::border-time} to arg-4 parsed as integer
                         send "&ABorder time set"
 
                 if arg-2 is "shop":
                     if arg-3 is "add":
+                        if player's held item is air:
+                            send "&6You must be holding the item you want to add"
+                            stop
                         add player's held item to {quest.shop::*}
                         send "&AItem added to shop"
                     if arg-3 is "set":
+                        if arg-4 is not set:
+                            send "&6Usage: /sq admin set [id]"
+                            stop
+                        if player's held item is air:
+                            send "&6You must be holding the item you want to add"
+                            stop
                         set {quest.shop::%arg-4%} to player's held item
                         send "&AShop item set"
                     if arg-3 is "remove":
+                        if arg-4 is not set:
+                            send "&6Usage: /sq admin remove [id]"
+                            stop
                         delete {quest.shop::%arg-4%}
                         send "&ARemoved item &f%arg-4%&A from shop"
                     if arg-3 is "price":
+                        if arg-5 is not set:
+                            send "&6Usage: /sq admin price [id] [price]"
+                            stop
+                        if arg-4 is not set:
+                            send "&6Usage: /sq admin price [id] [price]"
+                            stop
                         set 1st line of lore of {quest.shop::%arg-4%} to "&R%arg-5% emeralds"
                         send "&APrice set"
                     if arg-3 is "list":
@@ -303,11 +327,6 @@ command /survivalquest [<string>] [<string>] [<string>] [<string>] [<string>]:
 
             else:
                 send {@perm-deny}
-
-        if arg-1 is "info":
-            send "Maps: %{quest.maps::*}%"
-            loop {quest.maps::*}:
-                send "Players in %loop-value%/%loop-index%: %{quest.maps::%loop-index%::players::*}%"
 
         if arg-1 is "leavelobby":
             if {quest.lobby::*} contains player:

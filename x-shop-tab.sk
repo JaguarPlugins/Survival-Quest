@@ -1,0 +1,43 @@
+on tab completer for "survivalquest":
+    if argument at 6 is set:
+        stop
+    if argument at 1 is "admin":
+        if player has permission "quest.admin":
+
+            if argument at 2 is "shop":
+                if argument at 4 is set:
+                    stop
+                add "add" to completions
+                add "set" to completions
+                add "remove" to completions
+                add "price" to completions
+                add "list" to completions
+                stop
+
+            if argument at 2 is "border":
+                if argument at 4 is set:
+                    stop
+                add "start" to completions
+                add "time" to completions
+                stop
+
+            if argument at 3 is set:
+                stop
+
+            add "addWorld" to completions
+            add "removeWorld" to completions
+            add "clearMaps" to completions
+            add "setLobbyLoc" to completions
+            add "addSpawnLoc" to completions
+            add "clearSpawnLocs" to completions
+            add "border" to completions
+            add "shop" to completions
+            stop
+
+    if argument at 2 is set:
+        stop
+
+    if player has permission "quest.admin":
+        add "admin" to completions
+    add "leavelobby" to completions
+    add "shop" to completions
