@@ -54,8 +54,6 @@ function questWin(t: integer, w: world):
 
     {_w}.getWorldBorder().setSize({quest.maps::%{_w}%::border-start}, 1)
 
-    wait 1 second
-
     send "Team %{_t}% wins!" to {quest.maps::%{_w}%::players::*}
     send "Members: %{quest.maps::%{_w}%::teams::%{_t}%::*}%" to {quest.maps::%{_w}%::players::*} 
 
@@ -80,6 +78,8 @@ function questWin(t: integer, w: world):
 
 # Start Game
 function startQuestGame(w: world):
+
+    set time in {_w} to 12:00
 
     # Moving players from lobby to game
     set {_added} to 0
@@ -242,6 +242,9 @@ command /cleardata:
             clear {quest.maps::%loop-index-1%::players::*}    
             clear {quest.maps::%loop-index-1%::teams::*}
             clear {quest.maps::%loop-index-1%::alive::*}
+            clear {quest.maps::%loop-index-1%::placed-locs::*}
+            clear {quest.maps::%loop-index-1%::broken-blocks::*}   
+            clear {quest.maps::%loop-index-1%::broken-locs::*}
         send "cleared"
 
 command /survivalquest [<string>] [<string>] [<string>] [<string>] [<string>]:
@@ -340,3 +343,9 @@ command /survivalquest [<string>] [<string>] [<string>] [<string>] [<string>]:
                 openQuestShop(player)
             else:
                 send "&CYou are not in a game"
+
+        if arg-1 is "info":
+            send "Maps: %{quest.maps::*}%"
+            loop {quest.maps::*}:
+                send "Players in %loop-value%/%loop-index%: %{quest.maps::%loop-index%::players::*}%"
+                send "Blocks: %size of {quest.maps::%loop-index-1%::placed-locs::*}%, %size of {quest.maps::%loop-index-1%::broken-blocks::*}%, %size of {quest.maps::%loop-index-1%::broken-locs::*}%"
