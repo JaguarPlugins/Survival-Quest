@@ -1,0 +1,44 @@
+# NOTE: The commands involving the shop (admin and openshop) are on the main skript
+
+options:
+    poor: "&CYou do not have enough emeralds to buy that"
+    buy: "&AItem purchased"
+
+function openQuestShop(p: player):
+
+    set metadata tag "questShop" of {_p} to chest inventory with 3 rows named "&NItem shop"
+    loop integers between 1 and ((size of {quest.shop::*})):
+        set {_item} to {quest.shop::%loop-integer%}
+
+        set {_sections::*} to (1st line of lore of {_item}) split at " "
+        set {_price} to ({_sections::1} parsed as integer)
+        if {_p} has {_price} of emeralds:
+            set 1st line of lore of {_item} to "&A%1st line of lore of {_item}%"
+        else:
+            set 1st line of lore of {_item} to "&C%1st line of lore of {_item}%"
+
+        set slot (loop-integer - 1) of metadata tag "questShop" of {_p} to {_item}
+        open (metadata tag "questShop" of {_p}) to {_p}
+
+on inventory click:
+    if event-inventory = (metadata tag "questShop" of player):
+        cancel event
+        if item is set:
+
+            set {_sections::*} to (1st line of lore of item) split at " "
+            set {_price} to ((uncoloured {_sections::1}) parsed as integer)
+            
+            if player has {_price} of emeralds:
+
+                remove {_price} of emeralds from player's inventory
+                set {_item} to item
+                delete lore of {_item}
+                give player {_item}
+                send {@buy}
+
+            else:
+                send {@poor}
+
+command /shoptest:
+    trigger:
+        openQuestShop(player)

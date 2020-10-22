@@ -244,7 +244,7 @@ command /cleardata:
             clear {quest.maps::%loop-index-1%::alive::*}
         send "cleared"
 
-command /survivalquest [<string>] [<string>] [<string>] [<string>]:
+command /survivalquest [<string>] [<string>] [<string>] [<string>] [<string>]:
     aliases: sq
     executable by: players
     trigger:
@@ -285,6 +285,22 @@ command /survivalquest [<string>] [<string>] [<string>] [<string>]:
                         set {quest.maps::%player's world%::border-time} to arg-4 parsed as integer
                         send "&ABorder time set"
 
+                if arg-2 is "shop":
+                    if arg-3 is "add":
+                        add player's held item to {quest.shop::*}
+                        send "&AItem added to shop"
+                    if arg-3 is "set":
+                        set {quest.shop::%arg-4%} to player's held item
+                        send "&AShop item set"
+                    if arg-3 is "remove":
+                        delete {quest.shop::%arg-4%}
+                        send "&ARemoved item &f%arg-4%&A from shop"
+                    if arg-3 is "price":
+                        set 1st line of lore of {quest.shop::%arg-4%} to "&R%arg-5% emeralds"
+                        send "&APrice set"
+                    if arg-3 is "list":
+                        broadcast "Shop items: %{quest.shop::*}%"
+
             else:
                 send {@perm-deny}
 
@@ -299,3 +315,9 @@ command /survivalquest [<string>] [<string>] [<string>] [<string>]:
                 send "&AYou left the lobby"
             else:
                 send "&6You are not in the lobby"
+
+        if arg-1 is "shop":
+            if {quest.maps::%player's world%::players::*} contains player:
+                openQuestShop(player)
+            else:
+                send "&CYou are not in a game"
