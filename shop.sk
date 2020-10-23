@@ -6,7 +6,7 @@ options:
 
 function openQuestShop(p: player):
 
-    set metadata tag "questShop" of {_p} to chest inventory with 3 rows named "&NItem shop"
+    set metadata tag "questShop" of {_p} to chest inventory with 6 rows named "&NItem shop"
     loop integers between 1 and ((size of {quest.shop::*})):
         set {_item} to {quest.shop::%loop-integer%}
 

@@ -1,8 +1,8 @@
 options:
 
     # Game rules
-    game-min: 2
-    team-size: 1
+    game-min: 6
+    team-size: 2
     lobby-wait: 10
     death-delay: 1 # Time before game ends after last death
 
@@ -48,11 +48,14 @@ function questLeave(p: player):
             set {_team} to loop-index parsed as integer
 
     if {_alive} is 1:
-        wait {@death-delay} seconds
         questWin(({_team}), ({_p}'s world))
 
 # Game ends & winning
 function questWin(t: integer, w: world):
+
+    set {_x} to {_w}.getWorldBorder().setSize({quest.maps::%{_w}%::border-start}, 1)
+
+    wait {@death-delay} seconds
 
     send "Team %{_t}% wins!" to {quest.maps::%{_w}%::players::*}
     send "Members: %{quest.maps::%{_w}%::teams::%{_t}%::*}%" to {quest.maps::%{_w}%::players::*} 
@@ -75,8 +78,6 @@ function questWin(t: integer, w: world):
         clear {quest.maps::%loop-index-1%::placed-locs::*}
         clear {quest.maps::%loop-index-1%::broken-blocks::*}   
         clear {quest.maps::%loop-index-1%::broken-locs::*}
-
-    {_w}.getWorldBorder().setSize({quest.maps::%{_w}%::border-start})
 
 # Start Game
 function startQuestGame(w: world):
@@ -132,7 +133,7 @@ function startQuestGame(w: world):
     clear inventory of {quest.maps::%{_w}%::players::*}
     send {@join} to {quest.maps::%{_w}%::players::*}
 
-    {_w}.getWorldBorder().setSize(10, {quest.maps::%{_w}%::border-time})
+    set {_x} to {_w}.getWorldBorder().setSize(10, {quest.maps::%{_w}%::border-time})
 
 # Game Timer
 every second:
@@ -298,9 +299,6 @@ command /survivalquest [<string>] [<string>] [<string>] [<string>] [<string>]:
 
                 if arg-2 is "shop":
                     if arg-3 is "add":
-                        if player's held item is air:
-                            send "&6You must be holding the item you want to add"
-                            stop
                         add player's held item to {quest.shop::*}
                         send "&AItem added to shop"
                     if arg-3 is "set":
