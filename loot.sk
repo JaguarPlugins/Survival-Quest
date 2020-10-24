@@ -1,0 +1,28 @@
+# NOTE: The commands involving lootbox setup are on the main skript
+
+function placeQuestLoot(w: world):
+    loop {quest.maps::%{_w}%::box-locs::*}:
+
+        clear {_items::*}
+
+        set {_rarity} to {quest.maps::%{_w}%::box-rarities::%loop-index%}
+        set {_loc} to loop-value
+
+        set {_loot::*} to {quest.loot.%{_rarity}%::*}
+
+        set {_times} to a random integer between {quest.loot-min.%{_rarity}%} and {quest.loot-max.%{_rarity}%}
+        loop {_times} times:
+            set {_i} to a random integer between 1 and (size of {_loot::*})
+            add {_loot::%{_i}%} to {_items::*}
+            remove {_loot::%{_i}%} from {_loot::*}
+
+        set {_block} to block at {_loc}
+
+        loop {_items::*}:
+            add loop-value-2 to {_block}'s inventory
+
+function removeQuestLoot(w: world):
+    loop {quest.maps::%{_w}%::box-locs::*}:
+
+        set {_block} to block at loop-value
+        clear {_block}'s inventory

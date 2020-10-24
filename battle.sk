@@ -1,8 +1,8 @@
 options:
 
     # Game rules
-    game-min: 6
-    team-size: 2
+    game-min: 2
+    team-size: 1
     lobby-wait: 10
     death-delay: 1 # Time before game ends after last death
 
@@ -23,6 +23,7 @@ options:
     join: "&AGame started"
     death: "&CYou died!"
     friendly: "&6Stop hitting your own teammate!"
+    shulker: "&CYou cannot destroy a loot box"
 
 # Joining
 on rightclick on sign:
@@ -83,6 +84,7 @@ function questWin(t: integer, w: world):
 function startQuestGame(w: world):
 
     set time in {_w} to 12:00
+    placeQuestLoot({_w})
 
     # Moving players from lobby to game
     set {_added} to 0
@@ -192,6 +194,27 @@ on damage:
 on block break:
     if {quest.maps::%player's world%::players::*} contains player:
 
+        if block is a light gray shulker box:
+            send {@shulker}
+            cancel event
+            stop
+        if block is a lime shulker box:
+            send {@shulker}
+            cancel event
+            stop
+        if block is a light blue shulker box:
+            send {@shulker}
+            cancel event
+            stop
+        if block is a purple shulker box:
+            send {@shulker}
+            cancel event
+            stop
+        if block is a orange shulker box:
+            send {@shulker}
+            cancel event
+            stop
+
         if {quest.maps::%player's world%::broken-locs::*} does not contain (block's location):
             if {quest.maps::%player's world%::placed-locs::*} does not contain (block's location):
                 add type of block to {quest.maps::%player's world%::broken-blocks::*}
@@ -212,6 +235,8 @@ function questRegen(w: world):
 
     loop {quest.maps::%{_w}%::broken-blocks::*}:
         set block at {quest.maps::%{_w}%::broken-locs::%loop-index%} to loop-value
+
+    removeQuestLoot({_w})
 
     kill all projectiles in {_w}
     loop all living entities in {_w}:
@@ -324,6 +349,75 @@ command /survivalquest [<string>] [<string>] [<string>] [<string>] [<string>]:
                         send "&APrice set"
                     if arg-3 is "list":
                         broadcast "Shop items: %{quest.shop::*}%"
+
+                if arg-2 is "loot":
+                    if arg-3 is "createbox":
+                        if arg-4 is not set:
+                            send "&6Usage: /sq admin loot create [rarity]"
+                            stop
+                        add location of player's target block to {quest.maps::%player's world%::box-locs::*}
+                        add (arg-4 parsed as integer) to {quest.maps::%player's world%::box-rarities::*}
+                        send "&ALoot box added"
+                    if arg-3 is "list":
+                        if arg-4 is not set:
+                            send "&6Usage: /sq admin loot list <[rarity]|locs>"
+                            stop
+                        if arg-4 is "locs":
+                            send "&NLoot box locations:"
+                            loop {quest.maps::%player's world%::box-locs::*}:
+                                send "- %loop-value% (&7%{quest.maps::%player's world%::box-rarities::%loop-index%}%)"
+                            stop
+                        send "&NPossible loot items for rarity %arg-4%"
+                        loop {quest.loot.%arg-4%::*}:
+                            send "- %loop-value%"
+                    if arg-3 is "additem":
+                        if arg-4 is not set:
+                            send "&6Usage: /sq admin loot additem [rarity]"
+                            send "&6Desc: adds the block in your hand to the posibilities for that rarity"
+                            stop
+                        if player's held item is air:
+                            send "&6Air is not a very useful loot item"
+                            stop
+                        add (player's held item) to {quest.loot.%arg-4%::*}
+                        send "&A%player's held item% &Aadded to rarity %arg-4%&A posibilities"
+                    if arg-3 is "removeitem":
+                        if arg-4 is not set:
+                            send "&6Usage: /sq admin loot removeitem [rarity]"
+                            stop
+                        if {quest.loot.%arg-4%::*} does not contain player's held item:
+                            send "&6That item is not part of the rarity %arg-4%&6 loot box"
+                            stop
+                        remove player's held item from {quest.loot.%arg-4%::*}
+                        send "&ARemoved %player's held item%&A from rarity %arg-4%&A posibilities"
+                    if arg-3 is "max":
+                        if arg-4 is not set:
+                            send "&6Usage: /sq admin loot max [rarity] [maximum]"
+                            stop
+                        if arg-5 is not set:
+                            send "&6Usage: /sq admin loot max [rarity] [maximum]"
+                            stop
+                        set {quest.loot-max.%arg-4%} to arg-5 parsed as integer
+                        send "&AMax for rarity %arg-4%&A set to %arg-5%&A. &RPlease ensure that there are sufficient items in the rarity list for that maximum"
+                    if arg-3 is "min":
+                        if arg-4 is not set:
+                            send "&6Usage: /sq admin loot min [rarity] [minimum]"
+                            stop
+                        if arg-5 is not set:
+                            send "&6Usage: /sq admin loot min [rarity] [minimum]"
+                            stop
+                        set {quest.loot-min.%arg-4%} to arg-5 parsed as integer
+                        send "&AMin for rarity %arg-4%&A set to %arg-5%"
+                    if arg-3 is "removebox":
+                        loop {quest.maps::%player's world%::box-locs::*}:
+                            if loop-value is (location of player's target block):
+                                set {_loc} to loop-index
+                                exit loop
+                        if {_loc} is set:
+                            delete {quest.maps::%player's world%::box-locs::%{_loc}%}
+                            delete {quest.maps::%player's world%::box-rarities::%{_loc}%}
+                            send "&ALoot box location removed"
+                        else:
+                            send "&CThat location was not in the list"
 
             else:
                 send {@perm-deny}
