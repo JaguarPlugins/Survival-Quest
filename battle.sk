@@ -1,8 +1,8 @@
 options:
 
     # Game rules
-    game-min: 2
-    team-size: 1
+    game-min: 4
+    team-size: 2
     lobby-wait: 10
     death-delay: 1 # Time before game ends after last death
 
@@ -187,8 +187,45 @@ on damage:
             cancel event
             set victim's gamemode to spectator
             send victim title {@death}
+            send "&E%victim%&E died" to {quest.maps::%victim's world%::players::*}
             
             questLeave(victim) 
+
+# Teammate revival
+on rightclick holding totem of undying:
+    if {quest.maps::%player's world%::players::*} contains player:
+        
+        loop integers between 1 and ({@game-min} / {@team-size}):
+            if {quest.maps::%player's world%::teams::%loop-integer%::*} contains player:
+                set {_team} to loop-integer
+                exit loop
+        
+        if size of {quest.maps::%player's world%::teams::%{_team}%::*} < 2:
+            send "&CThere's no-one to revive"
+            stop
+
+        if (size of {quest.maps::%player's world%::teams::%{_team}%::*}) = (size of {quest.maps::%player's world%::alive::%{_team}%::*}):
+            send "&CThere's no-one to revive"
+            stop
+        
+        set {_dead::*} to {quest.maps::%player's world%::teams::%{_team}%::*}
+        loop {quest.maps::%player's world%::alive::%{_team}%::*}:
+            remove loop-value from {_dead::*}
+
+        set {_dead::*} to {_dead::*}
+        set {_i} to a random integer between 1 and (size of {_dead::*})
+        set {_ghost} to {_dead::%{_i}%}
+        
+        add {_ghost} to {quest.maps::%player's world%::alive::%{_team}%::*}
+        feed {_ghost}
+        heal {_ghost}
+        teleport {_ghost} to player's location
+        set gamemode of {_ghost} to survival
+
+        remove totem of undying from player's inventory
+
+        send {_ghost} title "&AWelcome back!"
+        send "&E%{_ghost}% was revived by their team!"
 
 # Blocks
 on block break:
