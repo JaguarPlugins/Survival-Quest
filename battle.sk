@@ -2,8 +2,8 @@ options:
 
     # Game rules
     game-min: 2
-    team-size: 2
-    lobby-wait: 10
+    team-size: 1
+    lobby-wait: 20
     death-delay: 1 # Time before game ends after last death
 
     # Admin command messages
@@ -93,11 +93,12 @@ function startQuestGame(w: world):
     # Moving players from lobby to game
     set {_added} to 0
     set {_temp::*} to {quest.lobby::*}
+    set {_max} to floor((size of {quest.lobby::*}) / {@team-size})
     loop {_temp::*}:
         add loop-value to {quest.maps::%{_w}%::players::*}
         remove loop-value from {quest.lobby::*}
         add 1 to {_added}
-        if {_added} >= {@game-min}:
+        if {_added} >= {_max}:
             exit loop
 
     # Team selection
@@ -120,7 +121,7 @@ function startQuestGame(w: world):
     # Spawning in
     set {_spawns::*} to {quest.maps::%{_w}%::spawns::*}
 
-    loop integers between 1 and ({@game-min} / {@team-size}):
+    loop integers between 1 and ((size of {quest.maps::%{_w}%::players::*}) / {@team-size}):
         
         # Adding dummy data to index in list so that it works
         set {quest.maps::%{_w}%::alive::%loop-integer%} to loop-integer
@@ -212,7 +213,7 @@ on damage:
 on rightclick holding totem of undying:
     if {quest.maps::%player's world%::players::*} contains player:
         
-        loop integers between 1 and ({@game-min} / {@team-size}):
+        loop integers between 1 and ((size of {quest.maps::%{_w}%::players::*}) / {@team-size}):
             if {quest.maps::%player's world%::teams::%loop-integer%::*} contains player:
                 set {_team} to loop-integer
                 exit loop
@@ -326,7 +327,7 @@ function updateQuestBoard(w: world):
     if {_secs} < 10:
         set {_secs} to "0%{_secs}%"
 
-    loop integers between 1 and ({@game-min} / {@team-size}):
+    loop integers between 1 and ((size of {quest.maps::%{_w}%::players::*}) / {@team-size}):
         loop {quest.maps::%{_w}%::teams::%loop-integer%::*}:
 
             set {_p} to {quest.maps::%{_w}%::teams::%loop-integer-1%::%loop-index-1%}
@@ -337,6 +338,11 @@ function updateQuestBoard(w: world):
             set title of {_p}'s scoreboard to "&3&L--- SurvivalQuest ---"
 
             set {_line} to 1
+
+            set line {_line} of {_p}'s scoreboard to "&7Do &5/sq shop&7 to buy items!"
+            add 1 to {_line}
+            set line {_line} of {_p}'s scoreboard to ""
+            add 1 to {_line}
 
             if size of {quest.maps::%{_w}%::teams::%loop-integer-1%::*} > 1:
                 
