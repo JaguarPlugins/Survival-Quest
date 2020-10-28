@@ -1,8 +1,8 @@
 options:
 
     # Game rules
-    game-min: 3
-    team-size: 3
+    game-min: 2
+    team-size: 2
     lobby-wait: 31
     death-delay: 1 # Time before game ends after last death
 
@@ -31,9 +31,11 @@ on rightclick on sign:
 
         if {quest.lobby::*} does not contain player:
 
+            set {quest.lobby::*} to {quest.lobby::*}
             add player to {quest.lobby::*}
             send {@lobby-join}
 
+            clear scoreboard of {quest.lobby::*}
             updateQuestLobbyBoard()
             toggle scoreboard of player on
 
@@ -65,6 +67,7 @@ function questWin(t: integer, w: world):
     send "Team %{_t}% wins!" to {quest.maps::%{_w}%::players::*}
     send "Members: %{quest.maps::%{_w}%::teams::%{_t}%::*}%" to {quest.maps::%{_w}%::players::*} 
 
+    set {quest.lobby::*} to {quest.lobby::*}
     loop {quest.maps::%{_w}%::players::*}:
         add loop-value to {quest.lobby::*}
 
@@ -73,6 +76,7 @@ function questWin(t: integer, w: world):
     heal {quest.maps::%{_w}%::players::*}
     set gamemode of {quest.maps::%{_w}%::players::*} to survival
 
+    clear scoreboard of {quest.maps::%{_w}%::players::*}
     updateQuestLobbyBoard()
 
     questRegen({_w})
@@ -104,6 +108,9 @@ function startQuestGame(w: world):
         add 1 to {_added}
         if {_added} >= {_max}:
             exit loop
+
+    clear scoreboard of {quest.lobby::*}
+    updateQuestLobbyBoard()
 
     # Team selection
     set {_team} to 1
@@ -218,7 +225,7 @@ on damage:
 on rightclick holding totem of undying:
     if {quest.maps::%player's world%::players::*} contains player:
         
-        loop integers between 1 and ((size of {quest.maps::%{_w}%::players::*}) / {@team-size}):
+        loop integers between 1 and ((size of {quest.maps::%player's world%::players::*}) / {@team-size}):
             if {quest.maps::%player's world%::teams::%loop-integer%::*} contains player:
                 set {_team} to loop-integer
                 exit loop
@@ -386,13 +393,12 @@ function updateQuestLobbyBoard():
     loop {quest.lobby::*}:
 
         set {_p} to loop-value
-        clear scoreboard of {_p}
 
         set title of {_p}'s scoreboard to "&3&L--- SurvivalQuest ---"
 
         set {_line} to 1
 
-        set line {_line} of {_p}'s scoreboard to "Do &5/sq leavelobby&f to leave"
+        set line {_line} of {_p}'s scoreboard to "Do &5/sq leave&f to leave"
         add 1 to {_line}
         set line {_line} of {_p}'s scoreboard to ""
         add 1 to {_line}
@@ -582,10 +588,13 @@ command /survivalquest [<string>] [<string>] [<string>] [<string>] [<string>]:
             else:
                 send {@perm-deny}
 
-        if arg-1 is "leavelobby":
+        if arg-1 is "leave":
             if {quest.lobby::*} contains player:
                 remove player from {quest.lobby::*}
                 toggle scoreboard of player off
+                clear scoreboard of {quest.lobby::*}
+                updateQuestLobbyBoard()
+                
                 send "&AYou left the lobby"
             else:
                 send "&6You are not in the lobby"

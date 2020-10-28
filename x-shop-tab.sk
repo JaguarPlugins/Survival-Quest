@@ -64,5 +64,5 @@ on tab completer for "survivalquest":
 
     if player has permission "quest.admin":
         add "admin" to completions
-    add "leavelobby" to completions
+    add "leave" to completions
     add "shop" to completions
