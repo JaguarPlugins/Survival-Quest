@@ -212,6 +212,12 @@ on damage:
         if damage >= victim's health:
 
             cancel event
+
+            loop all items in victim's inventory:
+                if loop-item is not air:
+                    drop loop-item at victim's location
+            clear victim's inventory
+
             set victim's gamemode to spectator
             send victim title {@death}
             add 1 to {quest.maps::%attacker's world%::kills::%attacker%}
