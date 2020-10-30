@@ -1,0 +1,53 @@
+on load:
+    set {quest.chal.messages::pick} to "Craft a diamond pickaxe"
+    set {quest.chal.rewards::pick} to 5
+
+    set {quest.chal.messages::farm} to "Craft a hoe"
+    set {quest.chal.rewards::farm} to 3
+
+function questInit(w: world):
+    loop {quest.maps::%{_w}%::players::*}:
+        clear {quest.%loop-value%.challenges::*}
+        delete {quest.%loop-value%.chal}
+
+        add "pick" to {quest.%loop-value%.challenges::*}
+        add "farm" to {quest.%loop-value%.challenges::*}
+
+        newQuest(loop-value)
+
+function newQuest(p: player):
+    if {quest.%{_p}%.chal} is set:
+
+        set {_chal} to {quest.%{_p}%.chal}
+        set {_num} to {quest.chal.rewards::%{_chal}%}
+
+        loop {_num} times:    
+            give {_p} an emerald
+        send {_p} title "&AChallenge complete!"
+
+        remove {quest.%{_p}%.chal} from {quest.%{_p}%.challenges::*}
+        delete {quest.%{_p}%.chal}
+
+    if size of {quest.%{_p}%.challenges::*} > 0:
+
+        set {quest.%{_p}%.challenges::*} to {quest.%{_p}%.challenges::*}
+        set {_i} to a random integer between 1 and (size of {quest.%{_p}%.challenges::*})
+        set {quest.%{_p}%.chal} to {quest.%{_p}%.challenges::%{_i}%}
+        set {_chal} to {quest.%{_p}%.chal}
+        set action bar of {_p} to {quest.chal.messages::%{_chal}%}
+
+    else:
+
+        wait 1 second
+        send {_p} title "&AAll quests complete!"
+
+# Triggers
+on craft of diamond pickaxe:
+    if {quest.maps::%player's world%::players::*} contains player:
+        if {quest.%player%.chal} is "pick":
+            newQuest(player)
+
+on craft of wooden hoe or stone hoe or iron hoe or gold hoe or diamond hoe or netherite hoe:
+    if {quest.maps::%player's world%::players::*} contains player:
+        if {quest.%player%.chal} is "farm":
+            newQuest(player)
