@@ -24,6 +24,7 @@ options:
     death: "&CYou died!"
     friendly: "&6Stop hitting your own teammate!"
     shulker: "&CYou cannot destroy a loot box"
+    sleep: "&CThere is no escape from the darkness of night!"
 
 # Joining
 on rightclick on sign:
@@ -320,6 +321,11 @@ function questRegen(w: world):
     kill all dropped items in {_w}
 
     set {quest.maps::%{_w}%::ready} to true
+
+on bed enter:
+    if {quest.maps::%player's world%::players::*} contains player:
+        cancel event
+        send {@sleep}
 
 # Chat
 on chat:
