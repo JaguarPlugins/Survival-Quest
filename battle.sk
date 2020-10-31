@@ -2,9 +2,9 @@ options:
 
     # Game rules
     game-min: 2
-    team-size: 2
+    team-size: 1
     lobby-wait: 31
-    death-delay: 3 # Time before game ends after last death
+    death-delay: 5 # Time before game ends after last death
 
     # Admin command messages
     perm-deny: "&CYou do not have permission to perform this command"
@@ -26,6 +26,14 @@ options:
     shulker: "&CYou cannot destroy a loot box"
     sleep: "&CThere is no escape from the darkness of night!"
 
+    # Sounds
+    n-click: "ui.button.click"
+    n-beep: "block.note_block.pling"
+    n-twinkle: "entity.player.levelup"
+    n-death: "entity.blaze.death"
+    n-beep2: "entity.arrow.hit_player"
+    n-win: "ui.toast.challenge_complete"
+
 # Joining
 on rightclick on sign:
     if 1st line of clicked block is "[Survival]":
@@ -35,6 +43,7 @@ on rightclick on sign:
             set {quest.lobby::*} to {quest.lobby::*}
             add player to {quest.lobby::*}
             send {@lobby-join}
+            play sound {@n-click} with volume 1000 and pitch 1 at player's location for player
 
             clear scoreboard of {quest.lobby::*}
             updateQuestLobbyBoard()
@@ -61,11 +70,12 @@ function questLeave(p: player):
 # Game ends & winning
 function questWin(t: integer, w: world):
 
+    set {quest.maps::%{_w}%::players::*} to {quest.maps::%{_w}%::players::*}
+
     set {_x} to {_w}.getWorldBorder().setSize({quest.maps::%{_w}%::border-start}, 1)
 
-    
-
     send {quest.maps::%{_w}%::players::*} title "Team %{_t}% wins!" with subtitle "&A%{quest.maps::%{_w}%::teams::%{_t}%::*}%"
+    play sound {@n-win} with volume 1000 and pitch 1 at {quest.maps::%{_w}%::players::1}'s location for {quest.maps::%{_w}%::players::*}
 
     wait {@death-delay} seconds
 
@@ -151,6 +161,7 @@ function startQuestGame(w: world):
     heal {quest.maps::%{_w}%::players::*}
     clear inventory of {quest.maps::%{_w}%::players::*}
     send {quest.maps::%{_w}%::players::*} title {@join}
+    play sound {@n-twinkle} with volume 1000 and pitch 1 at {quest.maps::%{_w}%::players::1}'s location for {quest.maps::%{_w}%::players::*}
 
     clear scoreboard of {quest.maps::%{_w}%::players::*}
     updateQuestBoard({_w})
@@ -223,6 +234,7 @@ on damage:
             send victim title {@death}
             add 1 to {quest.maps::%attacker's world%::kills::%attacker%}
             send "&E%victim%&E died" to {quest.maps::%victim's world%::players::*}
+            play sound {@n-death} with volume 1000 and pitch 1 at victim's location for victim
 
             questLeave(victim) 
 
@@ -263,6 +275,7 @@ on rightclick holding totem of undying:
 
         send {_ghost} title "&AWelcome back!"
         send "&E%{_ghost}% &Ewas revived by their team!" to {quest.maps::%player's world%::players::*}
+        play sound {@n-twinkle} with volume 1000 and pitch 1 at {_ghost}'s location for {quest.maps::%{_w}%::players::*}
 
 # Blocks
 on block break:
@@ -271,22 +284,27 @@ on block break:
         if block is a light gray shulker box:
             send {@shulker}
             cancel event
+            play sound {@n-beep} with volume 1000 and pitch 1 at player's location for player
             stop
         if block is a lime shulker box:
             send {@shulker}
             cancel event
+            play sound {@n-beep} with volume 1000 and pitch 1 at player's location for player
             stop
         if block is a light blue shulker box:
             send {@shulker}
             cancel event
+            play sound {@n-beep} with volume 1000 and pitch 1 at player's location for player
             stop
         if block is a purple shulker box:
             send {@shulker}
             cancel event
+            play sound {@n-beep} with volume 1000 and pitch 1 at player's location for player
             stop
         if block is a orange shulker box:
             send {@shulker}
             cancel event
+            play sound {@n-beep} with volume 1000 and pitch 1 at player's location for player
             stop
 
         if {quest.maps::%player's world%::broken-locs::*} does not contain (block's location):
@@ -326,6 +344,7 @@ on bed enter:
     if {quest.maps::%player's world%::players::*} contains player:
         cancel event
         send {@sleep}
+        play sound {@n-beep} with volume 1000 and pitch 1 at player's location for player
 
 # Chat
 on chat:
@@ -608,6 +627,7 @@ command /survivalquest [<string>] [<string>] [<string>] [<string>] [<string>]:
                 updateQuestLobbyBoard()
                 
                 send "&AYou left the lobby"
+                play sound {@n-click} with volume 1000 and pitch 1 at player's location for player
             else:
                 send "&6You are not in the lobby"
 
