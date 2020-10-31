@@ -318,6 +318,15 @@ on block place:
         if {quest.maps::%player's world%::placed-locs::*} does not contain (block's location):
             add block's location to {quest.maps::%player's world%::placed-locs::*}
 
+on explode:
+    if {quest.maps::*} contains world:
+        loop exploded blocks:
+            if loop-block is not air:
+                if {quest.maps::%world%::broken-locs::*} does not contain (loop-block's location):
+                if {quest.maps::%world%::placed-locs::*} does not contain (loop-block's location):
+                    add type of loop-block to {quest.maps::%world%::broken-blocks::*}
+                    add loop-block's location to {quest.maps::%world%::broken-locs::*}
+
 function questRegen(w: world):
     
     set {quest.maps::%{_w}%::ready} to false
