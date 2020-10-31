@@ -334,6 +334,10 @@ on leaves decay:
             add type of block to {quest.maps::%world%::broken-blocks::*}
             add block's location to {quest.maps::%world%::broken-locs::*}
 
+on item spawn of sapling:
+    if {quest.maps::*} contains world:
+        cancel event
+
 function questRegen(w: world):
     
     set {quest.maps::%{_w}%::ready} to false
