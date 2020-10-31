@@ -2,7 +2,7 @@ options:
 
     # Game rules
     game-min: 2
-    team-size: 1
+    team-size: 2
     lobby-wait: 31
     death-delay: 5 # Time before game ends after last death
 
@@ -27,12 +27,13 @@ options:
     sleep: "&CThere is no escape from the darkness of night!"
 
     # Sounds
-    n-click: "ui.button.click"
     n-beep: "block.note_block.pling"
     n-twinkle: "entity.player.levelup"
     n-death: "entity.blaze.death"
-    n-beep2: "entity.arrow.hit_player"
+    n-join: "entity.arrow.hit_player"
+    n-leave: "block.bamboo.fall"
     n-win: "ui.toast.challenge_complete"
+
 
 # Joining
 on rightclick on sign:
@@ -43,7 +44,7 @@ on rightclick on sign:
             set {quest.lobby::*} to {quest.lobby::*}
             add player to {quest.lobby::*}
             send {@lobby-join}
-            play sound {@n-click} with volume 1000 and pitch 1 at player's location for player
+            play sound {@n-join} with volume 1000 and pitch 1 at player's location for player
 
             clear scoreboard of {quest.lobby::*}
             updateQuestLobbyBoard()
@@ -275,7 +276,7 @@ on rightclick holding totem of undying:
 
         send {_ghost} title "&AWelcome back!"
         send "&E%{_ghost}% &Ewas revived by their team!" to {quest.maps::%player's world%::players::*}
-        play sound {@n-twinkle} with volume 1000 and pitch 1 at {_ghost}'s location for {quest.maps::%{_w}%::players::*}
+        play sound {@n-twinkle} with volume 1000 and pitch 1 at {_ghost}'s location for {quest.maps::%player's world%::players::*}
 
 # Blocks
 on block break:
@@ -647,7 +648,7 @@ command /survivalquest [<string>] [<string>] [<string>] [<string>] [<string>]:
                 updateQuestLobbyBoard()
                 
                 send "&AYou left the lobby"
-                play sound {@n-click} with volume 1000 and pitch 1 at player's location for player
+                play sound {@n-leave} with volume 1000 and pitch 0 at player's location for player
             else:
                 send "&6You are not in the lobby"
 
