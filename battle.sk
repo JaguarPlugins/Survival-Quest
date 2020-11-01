@@ -315,6 +315,20 @@ on leaves decay:
             add type of block to {quest.maps::%world%::broken-blocks::*}
             add block's location to {quest.maps::%world%::broken-locs::*}
 
+on fade:
+    if {quest.maps::*} contains world:
+        if {quest.maps::%world%::broken-locs::*} does not contain (block's location):
+        if {quest.maps::%world%::placed-locs::*} does not contain (block's location):
+            add type of block to {quest.maps::%world%::broken-blocks::*}
+            add block's location to {quest.maps::%world%::broken-locs::*}
+            broadcast "FADE OF %block%"
+
+on ignition:
+    if {quest.maps::%player's world%::players::*} contains player:
+
+        if {quest.maps::%player's world%::placed-locs::*} does not contain (location):
+            add location to {quest.maps::%player's world%::placed-locs::*}
+
 on item spawn of sapling:
     if {quest.maps::*} contains world:
         cancel event
