@@ -279,23 +279,7 @@ on rightclick holding totem of undying:
 on block break:
     if {quest.maps::%player's world%::players::*} contains player:
 
-        if block is a light gray shulker box:
-            send {@shulker}
-            cancel event
-            stop
-        if block is a lime shulker box:
-            send {@shulker}
-            cancel event
-            stop
-        if block is a light blue shulker box:
-            send {@shulker}
-            cancel event
-            stop
-        if block is a purple shulker box:
-            send {@shulker}
-            cancel event
-            stop
-        if block is a orange shulker box:
+        if block is any shulker box:
             send {@shulker}
             cancel event
             stop
@@ -333,7 +317,7 @@ function questRegen(w: world):
 
     set {quest.maps::%{_w}%::ready} to true
 
-on bed enter:
+on rightclick on any bed:
     if {quest.maps::%player's world%::players::*} contains player:
         cancel event
         send {@sleep}
