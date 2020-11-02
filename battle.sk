@@ -2,8 +2,8 @@ options:
 
     # Game rules
     game-min: 2
-    team-size: 2
-    lobby-wait: 31
+    team-size: 1
+    lobby-wait: 11
     death-delay: 5 # Time before game ends after last death
 
     # Admin command messages
@@ -161,6 +161,7 @@ function startQuestGame(w: world):
     feed {quest.maps::%{_w}%::players::*}
     heal {quest.maps::%{_w}%::players::*}
     clear inventory of {quest.maps::%{_w}%::players::*}
+    set flight mode of {quest.maps::%{_w}%::players::*} to false
     send {quest.maps::%{_w}%::players::*} title {@join}
     play sound {@n-twinkle} with volume 1000 and pitch 1 at {quest.maps::%{_w}%::players::1}'s location for {quest.maps::%{_w}%::players::*}
 
@@ -321,7 +322,6 @@ on fade:
         if {quest.maps::%world%::placed-locs::*} does not contain (block's location):
             add type of block to {quest.maps::%world%::broken-blocks::*}
             add block's location to {quest.maps::%world%::broken-locs::*}
-            broadcast "FADE OF %block%"
 
 on ignition:
     if {quest.maps::%player's world%::players::*} contains player:
