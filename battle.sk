@@ -1,8 +1,8 @@
 options:
 
     # Game rules
-    game-min: 2
-    team-size: 1
+    game-min: 4
+    team-size: 2
     lobby-wait: 11
     death-delay: 5 # Time before game ends after last death
 
@@ -21,10 +21,12 @@ options:
 
     # Game messages
     join: "&AGame started"
+    leave: "&AYou left the game"
     death: "&CYou died!"
     friendly: "&6Stop hitting your own teammate!"
     shulker: "&CYou cannot destroy a loot box"
     sleep: "&CThere is no escape from the darkness of night!"
+    return: "&AYou re-joined your old game"
 
     # Sounds
     n-beep: "block.note_block.pling"
@@ -34,13 +36,49 @@ options:
     n-leave: "block.bamboo.fall"
     n-win: "ui.toast.challenge_complete"
 
-
 # Joining
 on rightclick on sign:
     if 1st line of clicked block is "[Survival]":
 
+        loop {quest.maps::*}:
+            if {quest.maps::%loop-value-1%::leavers::*} contains player:
+
+                # REJOIN AFTER LEAVING
+                loop integers between 1 and ({quest.maps::%loop-value-1%::game-size} / {@team-size}):
+                    if {quest.maps::%loop-value-1%::teams::%loop-integer%::*} contains player:
+                        set {_team} to loop-integer
+                        broadcast {_team}
+                        exit loop
+                
+                if (size of {quest.maps::%loop-value-1%::alive::%{_team}%::*}) > 0:
+
+                    add player to {quest.maps::%loop-value-1%::players::*}
+                    remove player from {quest.maps::%loop-value-1%::leavers::*}
+
+                    set {quest.maps::%loop-value-1%::alive::%{_team}%::*} to {quest.maps::%loop-value-1%::alive::%{_team}%::*}
+                    teleport player to {quest.maps::%loop-value-1%::alive::%{_team}%::1}'s location
+                    wait 0.01 seconds
+                    set player's gamemode to spectator
+
+                    clear scoreboard of player
+                    updateQuestBoard(loop-value-1)
+                    toggle scoreboard of player on
+
+                    send {@return}
+                    play sound {@n-twinkle} with volume 1000 and pitch 1 at player's location for player
+                    send "&E%player%&E rejoined SurvivalQuest" to {quest.maps::%loop-value-1%::players::*}
+
+                    stop
+
+                else:
+
+                    remove player from {quest.maps::%loop-value-1%::teams::%{_team}%::*}
+                    remove player from {quest.maps::%loop-value-1%::leavers::*}
+                    send "&6Your team from last game all died, you can join the next game"
+
         if {quest.lobby::*} does not contain player:
 
+            # JOIN
             set {quest.lobby::*} to {quest.lobby::*}
             add player to {quest.lobby::*}
             send {@lobby-join}
@@ -55,6 +93,24 @@ on rightclick on sign:
 
 # Leaving
 function questLeave(p: player):
+
+    questDie({_p})
+    set {_w} to {_p}'s world
+    remove {_p} from {quest.maps::%{_w}%::players::*}
+    add {_p} to {quest.maps::%{_w}%::leavers::*}
+
+    teleport {_p} to {quest.lobby-loc}
+    heal {_p}
+    set gamemode of {_p} to survival
+
+    clear scoreboard of {_p}
+    toggle scoreboard of {_p} off
+
+    send {@leave} to {_p}
+    play sound {@n-leave} with volume 1000 and pitch 0 at {_p}'s location for {_p}
+    send "&E%{_p}%&E left SurvivalQuest" to {quest.maps::%{_w}%::players::*}
+
+function questDie(p: player):
     
     set {_alive} to 0
     set {_w} to {_p}'s world
@@ -95,14 +151,14 @@ function questWin(t: integer, w: world):
     questRegen({_w})
 
     # Clear variables
-    loop {quest.maps::*}:
-        clear {quest.maps::%loop-index-1%::players::*}    
-        clear {quest.maps::%loop-index-1%::teams::*}
-        clear {quest.maps::%loop-index-1%::alive::*}
-        clear {quest.maps::%loop-index-1%::placed-locs::*}
-        clear {quest.maps::%loop-index-1%::broken-blocks::*}   
-        clear {quest.maps::%loop-index-1%::broken-locs::*}
-        clear {quest.maps::%loop-index-1%::kills::*}
+    clear {quest.maps::%{_w}%::players::*}    
+    clear {quest.maps::%{_w}%::teams::*}
+    clear {quest.maps::%{_w}%::alive::*}
+    clear {quest.maps::%{_w}%::placed-locs::*}
+    clear {quest.maps::%{_w}%::broken-blocks::*}   
+    clear {quest.maps::%{_w}%::broken-locs::*}
+    clear {quest.maps::%{_w}%::kills::*}
+    clear {quest.maps::%{_w}%::leavers::*}
 
 # Start Game
 function startQuestGame(w: world):
@@ -121,6 +177,7 @@ function startQuestGame(w: world):
         add 1 to {_added}
         if {_added} >= {_max}:
             exit loop
+    set {quest.maps::%{_w}%::game-size} to size of {quest.maps::%{_w}%::players::*}
 
     clear scoreboard of {quest.lobby::*}
     updateQuestLobbyBoard()
@@ -144,7 +201,7 @@ function startQuestGame(w: world):
     # Spawning in
     set {_spawns::*} to {quest.maps::%{_w}%::spawns::*}
 
-    loop integers between 1 and ((size of {quest.maps::%{_w}%::players::*}) / {@team-size}):
+    loop integers between 1 and ({quest.maps::%{_w}%::game-size} / {@team-size}):
         
         # Adding dummy data to index in list so that it works
         set {quest.maps::%{_w}%::alive::%loop-integer%} to loop-integer
@@ -238,7 +295,7 @@ on damage:
             send "&E%victim%&E died" to {quest.maps::%victim's world%::players::*}
             play sound {@n-death} with volume 1000 and pitch 1 at victim's location for victim
 
-            questLeave(victim) 
+            questDie(victim) 
 
         updateQuestBoard(victim's world)
 
@@ -246,7 +303,7 @@ on damage:
 on rightclick holding totem of undying:
     if {quest.maps::%player's world%::players::*} contains player:
         
-        loop integers between 1 and ((size of {quest.maps::%player's world%::players::*}) / {@team-size}):
+        loop integers between 1 and ({quest.maps::%player's world%::game-size} / {@team-size}):
             if {quest.maps::%player's world%::teams::%loop-integer%::*} contains player:
                 set {_team} to loop-integer
                 exit loop
@@ -262,6 +319,11 @@ on rightclick holding totem of undying:
         set {_dead::*} to {quest.maps::%player's world%::teams::%{_team}%::*}
         loop {quest.maps::%player's world%::alive::%{_team}%::*}:
             remove loop-value from {_dead::*}
+        loop {quest.maps::%player's world%::leavers::*}:
+            remove loop-value from {_dead::*}
+
+        if size of {_dead::*} < 1:
+            send "&CYour teammate must rejoin the game before you can revive them"
 
         set {_dead::*} to {_dead::*}
         set {_i} to a random integer between 1 and (size of {_dead::*})
@@ -272,6 +334,7 @@ on rightclick holding totem of undying:
         heal {_ghost}
         teleport {_ghost} to player's location
         set gamemode of {_ghost} to survival
+        set {_ghost}'s flight mode to false
 
         remove totem of undying from player's inventory
 
@@ -385,7 +448,7 @@ function updateQuestBoard(w: world):
     if {_secs} < 10:
         set {_secs} to "0%{_secs}%"
 
-    loop integers between 1 and ((size of {quest.maps::%{_w}%::players::*}) / {@team-size}):
+    loop integers between 1 and ({quest.maps::%{_w}%::game-size} / {@team-size}):
         loop {quest.maps::%{_w}%::teams::%loop-integer%::*}:
 
             set {_p} to {quest.maps::%{_w}%::teams::%loop-integer-1%::%loop-index-1%}
@@ -409,9 +472,10 @@ function updateQuestBoard(w: world):
 
                     if {_tm} is not {_p}:
 
-                        if {_tm}'s gamemode is survival:
+                        if {quest.maps::%{_w}%::leavers::*} contains {_tm}:
+                            set line {_line} of {_p}'s scoreboard to "%{_tm}% &C?"
+                        else if {_tm}'s gamemode is survival:
                             set {_health} to {_tm's health}
-
                             set line {_line} of {_p}'s scoreboard to "%{_tm}% &B%{_tm}'s health%&B HP"
                         else:
                             set line {_line} of {_p}'s scoreboard to "%{_tm}% &C✗"
@@ -643,8 +707,10 @@ command /survivalquest [<string>] [<string>] [<string>] [<string>] [<string>]:
                 
                 send "&AYou left the lobby"
                 play sound {@n-leave} with volume 1000 and pitch 0 at player's location for player
+            else if {quest.maps::%player's world%::players::*} contains player:
+                questLeave(player)
             else:
-                send "&6You are not in the lobby"
+                send "&6You are not in the lobby or the game"
 
         if arg-1 is "shop":
             if {quest.maps::%player's world%::players::*} contains player:
