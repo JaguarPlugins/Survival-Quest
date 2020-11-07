@@ -92,6 +92,10 @@ on rightclick on sign:
             send {@re-join}
 
 # Leaving
+on quit:
+    if {quest.maps::%player's world%::players::*} contains player:
+        questLeave(player)
+
 function questLeave(p: player):
 
     questDie({_p})
