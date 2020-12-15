@@ -1,10 +1,10 @@
 options:
 
     # Game rules
-    game-min: 4
+    game-min: 6
     team-size: 2
-    lobby-wait: 11
-    death-delay: 5 # Time before game ends after last death
+    lobby-wait: 21
+    death-delay: 1 # Time before game ends after last death
 
     # Admin command messages
     perm-deny: "&CYou do not have permission to perform this command"
@@ -232,6 +232,8 @@ function startQuestGame(w: world):
 
     set {_x} to {_w}.getWorldBorder().setSize(10, {quest.maps::%{_w}%::border-time})
 
+    questInit({_w})
+
 # Game Timer
 every second:
 
@@ -268,6 +270,15 @@ every second:
     
     if size of {quest.lobby::*} > 0:
         updateQuestLobbyBoard()
+
+    # Quest message
+    loop {quest.maps::*}:
+        loop {quest.maps::%loop-index-1%::alive::*}:
+            loop {quest.maps::%loop-index-1%::alive::%loop-index-2%::*}:
+                if size of {quest.%loop-value-3%.challenges::*} > 0:
+
+                    set {_chal} to {quest.%loop-value-3%.chal}
+                    set action bar of loop-value-3 to {quest.chal.messages::%{_chal}%}
 
 # Damage
 on damage:
