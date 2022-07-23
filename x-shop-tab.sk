@@ -57,6 +57,7 @@ on tab completer for "survivalquest":
             add "border" to completions
             add "shop" to completions
             add "loot" to completions
+            add "listspawns" to completions
             stop
 
     if argument at 2 is set:

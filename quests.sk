@@ -23,7 +23,7 @@ function newQuest(p: player):
 
         loop {_num} times:    
             give {_p} an emerald
-        send {_p} title "&AChallenge complete!"
+        send title "&AChallenge complete!" to {_p} for 3 seconds
 
         remove {quest.%{_p}%.chal} from {quest.%{_p}%.challenges::*}
         delete {quest.%{_p}%.chal}
@@ -34,12 +34,15 @@ function newQuest(p: player):
         set {_i} to a random integer between 1 and (size of {quest.%{_p}%.challenges::*})
         set {quest.%{_p}%.chal} to {quest.%{_p}%.challenges::%{_i}%}
         set {_chal} to {quest.%{_p}%.chal}
-        set action bar of {_p} to {quest.chal.messages::%{_chal}%}
+        # set action bar of {_p} to {quest.chal.messages::%{_chal}%}
+        send "%{quest.chal.messages::%{_chal}%}%" to {_p}
 
     else:
 
         wait 1 second
-        send {_p} title "&AAll quests complete!"
+        send title "&AAll quests complete!" to {_p} for 3 seconds
+    wait 3 seconds
+    reset title of {_p}
 
 # Triggers
 on craft of diamond pickaxe:

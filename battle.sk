@@ -1,8 +1,8 @@
 options:
 
     # Game rules
-    game-min: 6
-    team-size: 2
+    game-min: 3
+    team-size: 1
     lobby-wait: 21
     death-delay: 1 # Time before game ends after last death
 
@@ -36,6 +36,10 @@ options:
     n-leave: "block.bamboo.fall"
     n-win: "ui.toast.challenge_complete"
 
+on load:
+    broadcast "&a========== LOADING SURVIVAL QUESTS ============"
+
+
 # Joining
 on rightclick on sign:
     if 1st line of clicked block is "[Survival]":
@@ -57,7 +61,7 @@ on rightclick on sign:
 
                     set {quest.maps::%loop-value-1%::alive::%{_team}%::*} to {quest.maps::%loop-value-1%::alive::%{_team}%::*}
                     teleport player to {quest.maps::%loop-value-1%::alive::%{_team}%::1}'s location
-                    wait 0.01 seconds
+                    wait 1 tick
                     set player's gamemode to spectator
 
                     clear scoreboard of player
@@ -135,10 +139,11 @@ function questWin(t: integer, w: world):
 
     set {_x} to {_w}.getWorldBorder().setSize({quest.maps::%{_w}%::border-start}, 1)
 
-    send {quest.maps::%{_w}%::players::*} title "Team %{_t}% wins!" with subtitle "&A%{quest.maps::%{_w}%::teams::%{_t}%::*}%"
+    send title "Team %{_t}% wins!" with subtitle "&A%{quest.maps::%{_w}%::teams::%{_t}%::*}%" to {quest.maps::%{_w}%::players::*} for 1 second
     play sound {@n-win} with volume 1000 and pitch 1 at {quest.maps::%{_w}%::players::1}'s location for {quest.maps::%{_w}%::players::*}
 
     wait {@death-delay} seconds
+    reset title of {quest.maps::%{_w}%::players::*}
 
     set {quest.lobby::*} to {quest.lobby::*}
     loop {quest.maps::%{_w}%::players::*}:
@@ -223,16 +228,20 @@ function startQuestGame(w: world):
     heal {quest.maps::%{_w}%::players::*}
     clear inventory of {quest.maps::%{_w}%::players::*}
     set flight mode of {quest.maps::%{_w}%::players::*} to false
-    send {quest.maps::%{_w}%::players::*} title {@join}
+    send title {@join} to {quest.maps::%{_w}%::players::*} for 3 seconds
     play sound {@n-twinkle} with volume 1000 and pitch 1 at {quest.maps::%{_w}%::players::1}'s location for {quest.maps::%{_w}%::players::*}
 
     clear scoreboard of {quest.maps::%{_w}%::players::*}
     updateQuestBoard({_w})
     toggle scoreboard of {quest.maps::%{_w}%::players::*} on
 
-    set {_x} to {_w}.getWorldBorder().setSize(10, {quest.maps::%{_w}%::border-time})
+    # just changed this
+    set {_x} to {_w}.getWorldBorder().setSize(7, {quest.maps::%{_w}%::border-time})
 
     questInit({_w})
+
+    wait 3 seconds
+    reset title of {quest.maps::%{_w}%::players::*}
 
 # Game Timer
 every second:
@@ -272,13 +281,13 @@ every second:
         updateQuestLobbyBoard()
 
     # Quest message
-    loop {quest.maps::*}:
-        loop {quest.maps::%loop-index-1%::alive::*}:
-            loop {quest.maps::%loop-index-1%::alive::%loop-index-2%::*}:
-                if size of {quest.%loop-value-3%.challenges::*} > 0:
+    # loop {quest.maps::*}:
+    #     loop {quest.maps::%loop-index-1%::alive::*}:
+    #         loop {quest.maps::%loop-index-1%::alive::%loop-index-2%::*}:
+    #             if size of {quest.%loop-value-3%.challenges::*} > 0:
 
-                    set {_chal} to {quest.%loop-value-3%.chal}
-                    set action bar of loop-value-3 to {quest.chal.messages::%{_chal}%}
+    #                 set {_chal} to {quest.%loop-value-3%.chal}
+    #                 set action bar of loop-value-3 to {quest.chal.messages::%{_chal}%}
 
 # Damage
 on damage:
@@ -305,7 +314,7 @@ on damage:
             clear victim's inventory
 
             set victim's gamemode to spectator
-            send victim title {@death}
+            send title {@death} to victim
             add 1 to {quest.maps::%attacker's world%::kills::%attacker%}
             send "&E%victim%&E died" to {quest.maps::%victim's world%::players::*}
             play sound {@n-death} with volume 1000 and pitch 1 at victim's location for victim
@@ -313,6 +322,9 @@ on damage:
             questDie(victim) 
 
         updateQuestBoard(victim's world)
+
+        wait 3 seconds
+        reset title of victim
 
 # Teammate revival
 on rightclick holding totem of undying:
@@ -353,9 +365,11 @@ on rightclick holding totem of undying:
 
         remove totem of undying from player's inventory
 
-        send {_ghost} title "&AWelcome back!"
-        send "&E%{_ghost}% &Ewas revived by their team!" to {quest.maps::%player's world%::players::*}
         play sound {@n-twinkle} with volume 1000 and pitch 1 at {_ghost}'s location for {quest.maps::%player's world%::players::*}
+        send "&E%{_ghost}% &Ewas revived by their team!" to {quest.maps::%player's world%::players::*}
+        send title "&AWelcome back!" to {_ghost} for 3 seconds
+        wait 3 seconds
+        reset title of {_ghost}
 
 # Blocks
 on block break:
@@ -554,9 +568,12 @@ function updateQuestLobbyBoard():
         set line {_line} of {_p}'s scoreboard to ""
 
 # Commands
-command /cleardata:
+command /clearquestsdata:
     trigger:
         clear {quest.lobby::*}
+        loop {quest.maps::*}:
+            send "regenning %loop-value%"
+            questRegen(loop-value)
         loop {quest.maps::*}:
             clear {quest.maps::%loop-index-1%::players::*}    
             clear {quest.maps::%loop-index-1%::teams::*}
@@ -587,6 +604,9 @@ command /survivalquest [<string>] [<string>] [<string>] [<string>] [<string>]:
                     clear {quest.maps::*}
                     send "&CALL THE BLOODY DATA IS NOW GONE!"
 
+                if arg-2 is "listSpawns":
+                    send "&nSpawn Locations:"
+                    send {quest.maps::%player's world%::spawns::*}
 
                 if arg-2 is "setLobbyLoc":
                     set {quest.lobby-loc} to player's location
