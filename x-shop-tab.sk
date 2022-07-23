@@ -1,69 +1,19 @@
-on tab complete of "/survivalquest":
-    if tab arg-6 is set:
-        stop
+on tab complete of "/sq":
+    set tab completions for position 1 to "admin", "leave" and "shop"
+    
     if tab arg-1 is "admin":
-        if player has permission "quest.admin":
+        set tab completions for position 2 to "addWorld", "removeWorld", "clearMaps", "setLobbyLoc", "addSpawnLoc", "clearSpawnLocs", "border", "shop", "loot", "listSpawns"
+    
+    if tab arg-2 is "shop":
+        set tab completions for position 3 to "add", "set", "remove", "price", "list"
+    if tab arg-2 is "border":
+        set tab completions for position 3 to "start", "time"
 
-            if tab arg-2 is "loot":
-                if tab arg-3 is "removebox":
-                    stop
-                if tab arg-3 is "list":
-                    if tab arg-5 is not set:
-                        add "locs" to tab completions
-                        loop integers between 1 and 5:
-                            add "%loop-integer%" to tab completions
-                        stop
-                if tab arg-5 is set:
-                    stop
-                if tab arg-4 is set:
-                    loop integers between 1 and 5:
-                        add "%loop-integer%" to tab completions
-                    stop
-                add "createbox" to tab completions
-                add "additem" to tab completions
-                add "removeitem" to tab completions
-                add "max" to tab completions
-                add "min" to tab completions
-                add "removebox" to tab completions
-                add "list" to tab completions
-                stop
-
-            if tab arg-2 is "shop":
-                if tab arg-4 is set:
-                    stop
-                add "add" to tab completions
-                add "set" to tab completions
-                add "remove" to tab completions
-                add "price" to tab completions
-                add "list" to tab completions
-                stop
-
-            if tab arg-2 is "border":
-                if tab arg-4 is set:
-                    stop
-                add "start" to tab completions
-                add "time" to tab completions
-                stop
-
-            if tab arg-3 is set:
-                stop
-
-            add "addWorld" to tab completions
-            add "removeWorld" to tab completions
-            add "clearMaps" to tab completions
-            add "setLobbyLoc" to tab completions
-            add "addSpawnLoc" to tab completions
-            add "clearSpawnLocs" to tab completions
-            add "border" to tab completions
-            add "shop" to tab completions
-            add "loot" to tab completions
-            add "listspawns" to tab completions
-            stop
-
-    if tab arg-2 is set:
-        stop
-
-    if player has permission "quest.admin":
-        add "admin" to tab completions
-    add "leave" to tab completions
-    add "shop" to tab completions
+    if tab arg-2 is "loot":
+        set tab completions for position 3 to "createbox", "additem", "removeitem", "max", "min", "removebox", "list"
+        if tab arg-3 is "list":
+            set tab completions for position 4 to "locs", "1", "2", "3", "4", "5"
+        else:
+            if tab arg-3 is not "removebox":
+                set tab completions for position 4 to "1", "2", "3", "4", "5"
+        

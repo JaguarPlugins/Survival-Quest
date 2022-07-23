@@ -574,9 +574,7 @@ function updateQuestLobbyBoard():
 command /clearquestsdata:
     trigger:
         clear {quest.lobby::*}
-        loop {quest.maps::*}:
-            send "regenning %loop-value%"
-            questRegen(loop-value)
+        send "all good so far"
         loop {quest.maps::*}:
             clear {quest.maps::%loop-index-1%::players::*}    
             clear {quest.maps::%loop-index-1%::teams::*}
