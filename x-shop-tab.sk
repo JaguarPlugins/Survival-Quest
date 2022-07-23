@@ -1,69 +1,69 @@
-on tab completer for "survivalquest":
-    if argument at 6 is set:
+on tab complete of "/survivalquest":
+    if tab arg-6 is set:
         stop
-    if argument at 1 is "admin":
+    if tab arg-1 is "admin":
         if player has permission "quest.admin":
 
-            if argument at 2 is "loot":
-                if argument at 3 is "removebox":
+            if tab arg-2 is "loot":
+                if tab arg-3 is "removebox":
                     stop
-                if argument at 3 is "list":
-                    if argument at 5 is not set:
-                        add "locs" to completions
+                if tab arg-3 is "list":
+                    if tab arg-5 is not set:
+                        add "locs" to tab completions
                         loop integers between 1 and 5:
-                            add "%loop-integer%" to completions
+                            add "%loop-integer%" to tab completions
                         stop
-                if argument at 5 is set:
+                if tab arg-5 is set:
                     stop
-                if argument at 4 is set:
+                if tab arg-4 is set:
                     loop integers between 1 and 5:
-                        add "%loop-integer%" to completions
+                        add "%loop-integer%" to tab completions
                     stop
-                add "createbox" to completions
-                add "additem" to completions
-                add "removeitem" to completions
-                add "max" to completions
-                add "min" to completions
-                add "removebox" to completions
-                add "list" to completions
+                add "createbox" to tab completions
+                add "additem" to tab completions
+                add "removeitem" to tab completions
+                add "max" to tab completions
+                add "min" to tab completions
+                add "removebox" to tab completions
+                add "list" to tab completions
                 stop
 
-            if argument at 2 is "shop":
-                if argument at 4 is set:
+            if tab arg-2 is "shop":
+                if tab arg-4 is set:
                     stop
-                add "add" to completions
-                add "set" to completions
-                add "remove" to completions
-                add "price" to completions
-                add "list" to completions
+                add "add" to tab completions
+                add "set" to tab completions
+                add "remove" to tab completions
+                add "price" to tab completions
+                add "list" to tab completions
                 stop
 
-            if argument at 2 is "border":
-                if argument at 4 is set:
+            if tab arg-2 is "border":
+                if tab arg-4 is set:
                     stop
-                add "start" to completions
-                add "time" to completions
+                add "start" to tab completions
+                add "time" to tab completions
                 stop
 
-            if argument at 3 is set:
+            if tab arg-3 is set:
                 stop
 
-            add "addWorld" to completions
-            add "removeWorld" to completions
-            add "clearMaps" to completions
-            add "setLobbyLoc" to completions
-            add "addSpawnLoc" to completions
-            add "clearSpawnLocs" to completions
-            add "border" to completions
-            add "shop" to completions
-            add "loot" to completions
-            add "listspawns" to completions
+            add "addWorld" to tab completions
+            add "removeWorld" to tab completions
+            add "clearMaps" to tab completions
+            add "setLobbyLoc" to tab completions
+            add "addSpawnLoc" to tab completions
+            add "clearSpawnLocs" to tab completions
+            add "border" to tab completions
+            add "shop" to tab completions
+            add "loot" to tab completions
+            add "listspawns" to tab completions
             stop
 
-    if argument at 2 is set:
+    if tab arg-2 is set:
         stop
 
     if player has permission "quest.admin":
-        add "admin" to completions
-    add "leave" to completions
-    add "shop" to completions
+        add "admin" to tab completions
+    add "leave" to tab completions
+    add "shop" to tab completions

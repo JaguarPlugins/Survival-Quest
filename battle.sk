@@ -546,8 +546,11 @@ function updateQuestLobbyBoard():
         set {_max} to (size of {quest.lobby::*}) - mod((size of {quest.lobby::*}), {@team-size})
         
         loop {quest.lobby::*}:
-            if ({_added} < {_max}) and (size of {quest.lobby::*} >= {@game-min}):
-                set line {_line} of {_p}'s scoreboard to "&7%loop-value-2%"
+            if {_added} < {_max}:
+                if (size of {quest.lobby::*} >= {@game-min}):
+                    set line {_line} of {_p}'s scoreboard to "&7%loop-value-2%"
+                else:
+                    set line {_line} of {_p}'s scoreboard to "&4%loop-value-2%"
             else:
                 set line {_line} of {_p}'s scoreboard to "&4%loop-value-2%"
             add 1 to {_added}
